@@ -1,5 +1,4 @@
 import numbers
-from typing import List
 
 
 class Line:
