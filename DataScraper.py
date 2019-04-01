@@ -5,14 +5,13 @@ import nltk
 import numpy as np
 import requests
 from bs4 import BeautifulSoup, Tag
-
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
 
 # This package is needed to use the tokenize functions from nltk
 nltk.download("punkt")
 
-from Searchers import GoogleSearcher, Searcher
+from Searchers import Searcher
 
 
 class Scraper:
