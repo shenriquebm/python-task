@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup, Tag
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
 
-from Searchers import Searcher, GoogleSearcher
+from Searchers import Searcher
 
 # This package is needed to use the tokenize functions from nltk
 nltk.download("punkt")
