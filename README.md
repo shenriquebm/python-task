@@ -1,3 +1,5 @@
+Note: There's extensive commentary and documentation on every file.
+
 #### How this code is organized
 
 There are 4 files that implement functions and classes, they are:
