@@ -33,12 +33,14 @@ class GoogleSearcher(Searcher):
     def __init__(self):
         super().__init__()
 
-    def search(self, query: str):
+    def search(self, query: str, searcher=search):
         """
         Calls to the python binding to google search and performs a search using the given parameters
+        :param query: Original user query
+        :param searcher: which function to use to search the web
         """
         self.query = query
 
         assert self.query is not None and self.query != "", "Query should not be empty"
         assert isinstance(self.query, str), "Query should be a string"
-        self.urls = [url for url in search(self.query, stop=self.n_results)]
+        self.urls = [url for url in searcher(self.query, stop=self.n_results)]

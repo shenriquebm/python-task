@@ -22,13 +22,17 @@ def compare_version_strings(version_str1: str, version_str2: str, sep: str = "."
     versions_1 = [int(v) for v in version_str1.split(sep)]
     versions_2 = [int(v) for v in version_str2.split(sep if not sep2 else sep2)]
 
+    # if the versions are different in sizes, append 0 so they can compare to each other
+    versions_1 += [0] * max(0, len(versions_2) - len(versions_1))
+    versions_2 += [0] * max(0, len(versions_1) - len(versions_2))
+
+    # When parsing int values, we could end up with a negative value. This is an error, since we don't want negative
+    # versions on the version string.
+    if len([v for v in versions_1 if v < 0]) > 0 or len([v for v in versions_2 if v < 0]) > 0:
+        raise ValueError("Invalid value for version string. Should be higher or equal than 0.")
+
     # iterate over them, and compare them using lt and gt operators.
     for v1, v2 in zip(versions_1, versions_2):
-
-        # When parsing int values, we could end up with a negative value. This is an error, since we don't want negative
-        # versions on the version string.
-        if v1 < 0 or v2 < 0:
-            raise ValueError("Invalid value for version string. Should be higher or equal than 0.")
         if v1 > v2:
             return 1
         if v2 > v1:

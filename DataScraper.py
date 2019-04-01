@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup, Tag
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
 
-from Searchers import Searcher
+from Searchers import Searcher, GoogleSearcher
 
 # This package is needed to use the tokenize functions from nltk
 nltk.download("punkt")
@@ -19,7 +19,7 @@ class Scraper:
     A simple web-scraper interface
     """
 
-    def get_soup(self, url: str) -> BeautifulSoup:
+    def get_soup(self, url: str, getter=requests.get) -> BeautifulSoup:
         raise NotImplementedError
 
 
@@ -31,13 +31,14 @@ class SimpleWebScraper(Scraper):
     def __init__(self, parser: str = "html.parser"):
         self.parser = parser
 
-    def get_soup(self, url: str) -> BeautifulSoup:
+    def get_soup(self, url: str, getter=requests.get) -> BeautifulSoup:
         """
         Returns a BeautifulSoup object to be used on the next steps
         :param url: URL to extract the info from
+        :param getter: Which function to use for requesting
         :return: Soup containing web info
         """
-        response = requests.get(url)
+        response = getter(url)
         response.raise_for_status()
 
         return BeautifulSoup(response.text, self.parser)
@@ -48,6 +49,7 @@ class TextSummariser:
     Base interface for a text summariser. They receive a soup, from the webscraper and then return a summary of the text
     inside the website, that is the most relevant to the user, given his query.
     """
+
     def __init__(self):
         self.soup = None
         self.query = None
@@ -60,6 +62,7 @@ class CosineTag:
     """
     Object to return a pair of the original text of the webpage, and the preprocessed version of this text
     """
+
     def __init__(self, original, preprocessed):
         self.original = original
         self.preprocessed = preprocessed
@@ -70,11 +73,12 @@ class CosineSummariser(TextSummariser):
     CosineSummariser, computes similarity of the documents (in this case, tags in the web page), representing them as
     tfidf vectors.
     """
+
     def __init__(self):
         super().__init__()
         self.tags = []
 
-    def summarise(self, soup: BeautifulSoup, query: str) -> str:
+    def summarise(self, soup: BeautifulSoup, query: str) -> Tag:
         """
         Consider the text inside each tag as the document. Preprocess the text, removing whitespace and non-letters
         chars. Create a corpus of every tag, and calculate the tfidf vector. Use the created vector to calculate the
@@ -116,6 +120,7 @@ class SentenceSummariser(TextSummariser):
     purpose of demonstrating how it is possible to extend the current API to use another summariser and give other
     results to the text insight.
     """
+
     def __init__(self, pre: int = 5, pos: int = 5):
         super().__init__()
         self.text = ""
@@ -185,6 +190,7 @@ class Summary:
     """
     Base object to hold the result of a summary, which includes the summary of the webpage, and its url
     """
+
     def __init__(self, summary: str, url: str):
         self.summary = summary
         self.url = url
@@ -195,15 +201,17 @@ class TextInsight:
     Class that unites every part of the text insight API, it calls every needed method that are available on the
     searcher, scraper and summariser and returns a list with the Summary object for each page
     """
+
     def __init__(self, searcher: Searcher, scraper: Scraper, summariser: TextSummariser):
         self.searcher = searcher
         self.scraper = scraper
         self.summariser = summariser
 
-    def get(self, query: str) -> List[Summary]:
+    def get(self, query: str, getter=requests.get) -> List[Summary]:
         """
         Performs the text insight collection, given the set of searcher, scraper and summariser given. This is done so
         any of those are swappable to a new/different version of each.
+        :param getter: Getter function to request to webpage on scraper
         :param query: Original user query
         :return: List containing summarisation of the first n responses of a search in a web engine
         """
@@ -211,7 +219,7 @@ class TextInsight:
         summary_list = []
         self.searcher.search(query)
         for url in self.searcher.urls:
-            soup = self.scraper.get_soup(url)
+            soup = self.scraper.get_soup(url, getter)
             summary = self.summariser.summarise(soup, query)
             summary_list.append(Summary(summary, url))
         return summary_list
